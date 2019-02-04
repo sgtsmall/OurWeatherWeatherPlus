@@ -317,8 +317,61 @@ void myBTimerEvent()
     Blynk.virtualWrite(V84,  atof(floatString));
     Blynk.virtualWrite(V54, String(floatString)  + "V");
 
-  
-    
+
+
+    dtostrf(LoadCurrent, 5, 1, floatString);
+    Blynk.virtualWrite(V85, atof(floatString) );
+    Blynk.virtualWrite(V55, String(floatString)  + "mA");
+
+
+    // Power
+
+    dtostrf((BatteryVoltage * BatteryCurrent ) / 1000.0, 5, 2, floatString);
+    Blynk.virtualWrite(V60, String(floatString) + "W");
+
+    dtostrf((SolarPanelVoltage * SolarPanelCurrent) / 1000.0, 5, 2, floatString);
+    Blynk.virtualWrite(V61, String(floatString) + "W" );
+
+    dtostrf((LoadVoltage * LoadCurrent) / 1000.0, 5, 2, floatString);
+    Blynk.virtualWrite(V62,  String(floatString) + "W");
+
+
+
+  }
+  if (SunAirPlusWX_Present)
+  {
+
+
+    Blynk.virtualWrite(V56, String(returnPercentLeftInBattery(BatteryVoltage , 4.19)) );
+    Blynk.virtualWrite(V57, String(returnPercentLeftInBattery(BatteryVoltage , 4.19)) + "%" );
+    //
+    // Now do the graphs and results on the solar page
+    delay(1000); // push variables into next second - avoid flood
+
+    dtostrf(SolarPanelVoltage, 5, 2, floatString);
+    Blynk.virtualWrite(V80,  atof(floatString));
+    Blynk.virtualWrite(V50,  String(floatString) + "V");
+
+    dtostrf(SolarPanelCurrent, 5, 1, floatString);
+    Blynk.virtualWrite(V81, atof(floatString ));
+    Blynk.virtualWrite(V51, String(floatString ) + "mA");
+
+    dtostrf(BatteryVoltage, 5, 2, floatString);
+    Blynk.virtualWrite(V82,  atof(floatString));
+    Blynk.virtualWrite(V52,  String(floatString) + "V");
+
+    dtostrf(BatteryCurrent, 5, 1, floatString);
+    Blynk.virtualWrite(V83, atof(floatString) );
+    Blynk.virtualWrite(V53, String(floatString)  + "mA");
+
+
+
+    dtostrf(LoadVoltage, 5, 2, floatString);
+    Blynk.virtualWrite(V84,  atof(floatString));
+    Blynk.virtualWrite(V54, String(floatString)  + "V");
+
+
+
     dtostrf(LoadCurrent, 5, 1, floatString);
     Blynk.virtualWrite(V85, atof(floatString) );
     Blynk.virtualWrite(V55, String(floatString)  + "mA");
@@ -386,4 +439,3 @@ void myBTimerEvent()
 
   }
 */
-

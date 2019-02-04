@@ -125,7 +125,7 @@ void writeEEPROMState()
   }
   EEPROM.write(i, '\0');
 
-  // write out BlynkAuthCode
+  // write out BlynkAuthCode assume 32 char
 
   for (i = 349; i < BlynkAuthCode.length() + 349; i++)
   {
@@ -134,6 +134,9 @@ void writeEEPROMState()
 
   }
   EEPROM.write(i, '\0');
+
+
+  EEPROM.write(380, SunAirPlusWXtoBlynk);
 
 
   EEPROM.commit();
@@ -177,6 +180,8 @@ void writeEEPROMState()
   Serial.println(as3935_Params);
   Serial.print("BlynkAuthCode=");
   Serial.println(BlynkAuthCode);
+  Serial.print("SunAirPlusWXtoBlynk:");
+  Serial.println(SunAirPlusWXtoBlynk);
 
 }
 
@@ -349,7 +354,7 @@ void readEEPROMState()
     else
       UseBlynk = true;
 
-
+   SunAirPlusWXtoBlynk = EEPROM.read(380);
 
 
 
@@ -372,6 +377,7 @@ void readEEPROMState()
     SDL2PubNubCode = "XX";
     SDL2PubNubCode_Sub = "XX";
     BlynkAuthCode = "";
+    SunAirPlusWXtoBlynk = 0;
     writeEEPROMState();
 
 
@@ -411,6 +417,8 @@ void readEEPROMState()
   Serial.println(BlynkAuthCode);
   Serial.print("UseBlynk=");
   Serial.println(UseBlynk);
+  Serial.print("SunAirPlusWXtoBlynk:");
+  Serial.println(SunAirPlusWXtoBlynk);
 }
 
 

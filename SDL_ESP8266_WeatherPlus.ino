@@ -7,9 +7,9 @@
 //
 
 
-#define WEATHERPLUSESP8266VERSION "035"
+#define WEATHERPLUSESP8266VERSION "035A"
 
-#define WEATHERPLUSPUBNUBPROTOCOL "OURWEATHER035"
+#define WEATHERPLUSPUBNUBPROTOCOL "OURWEATHER035A"
 
 // define DEBUGPRINT to print out lots of debugging information for WeatherPlus.
 
@@ -263,6 +263,7 @@ int EnglishOrMetric;   // 0 = English units, 1 = Metric
 
 int WeatherDisplayMode;
 
+int SunAirPlusWXtoBlynk; // 0=Off, 1 = Enable
 // DS3231 Library functions
 
 #include "RtcDS3231.h"
@@ -615,6 +616,7 @@ float lastRain;
 // SunAirPlus
 
 bool SunAirPlus_Present;
+bool SunAirPlusWX_Present;
 
 float BatteryVoltage;
 float BatteryCurrent;
@@ -637,6 +639,7 @@ bool WXLink_Present;
 float WXBatteryVoltage;
 float WXBatteryCurrent;
 
+float WXLoadVoltage;
 float WXLoadCurrent;
 float WXSolarPanelVoltage;
 float WXSolarPanelCurrent;
@@ -784,7 +787,7 @@ void setup() {
   digitalWrite(blinkPin, HIGH);  // High of this pin is LED OFF
 
 
-  Serial.begin(115200);           // set up Serial library at 9600 bps
+  Serial.begin(115200);           // set up Serial library at 115200 bps
 
   // Setup DS3231 RTC
 
@@ -1076,7 +1079,8 @@ void setup() {
   rest.function("setThunderBoardParams", setThunderBoardParams);
 
 
-
+  rest.function("SunAirPlusWXEnab",   SAPWXBEnableControl);
+  rest.function("SunAirPlusWXDis",   SAPWXBDisabledControl);
 
 
   // Give name and ID to device
@@ -1123,6 +1127,24 @@ void setup() {
     Serial.println("SunAirPlus Present");
   }
 
+
+//Find a way to test for a remote SunAirPlus
+  // test for SunAirPlusWX_Present
+  SunAirPlusWX_Present = false;
+
+  //LoadVoltage = SunAirPlus.getBusVoltage_V(OUTPUT_CHANNEL);
+
+  //if (LoadVoltage < 0.1)
+  //{
+  //  SunAirPlusR_Present = false;
+  //  Serial.println("SunAirPlusR Not Present");
+  //}
+  //else
+  //{
+    SunAirPlusWX_Present = true;
+    Serial.println("SunAirPlusWX Present");
+  //}
+
   // test for WXLink Present
 
   WXLink_Present = false;
@@ -1132,6 +1154,7 @@ void setup() {
   WXLastMessageGood = false;
 
   WXMessageID = 0;
+  WXLoadVoltage = 0.0;
   WXLoadCurrent = 0.0;
 
 
@@ -1337,7 +1360,17 @@ void setup() {
     }
     else
     {
-      writeToBlynkStatusTerminal("SunAirPlus Not Present");
+      writeToBlynkStatusTerminal("SunAirPlus NP");
+    }
+    // Print out the presents
+    if (SunAirPlusWX_Present)
+    {
+      writeToBlynkStatusTerminal("SunAirPlusWX Present");
+
+    }
+    else
+    {
+      writeToBlynkStatusTerminal("SunAirPlusWX NP");
     }
 
     if (WXLink_Present)
@@ -1347,17 +1380,17 @@ void setup() {
     }
     else
     {
-      writeToBlynkStatusTerminal("WXLink Not Present");
+      writeToBlynkStatusTerminal("WXLink NP");
     }
 
     if (AirQualityPresent)
     {
-      writeToBlynkStatusTerminal("Air Quality Sensor Present");
+      writeToBlynkStatusTerminal("Air Quality Present");
 
     }
     else
     {
-      writeToBlynkStatusTerminal("Air Quality Sensor Not Present");
+      writeToBlynkStatusTerminal("Air Quality NP");
     }
 
     if (BMP280Found)
@@ -1367,7 +1400,7 @@ void setup() {
     }
     else
     {
-      writeToBlynkStatusTerminal("BMP280 Not Present");
+      writeToBlynkStatusTerminal("BMP280 NP");
     }
 
     if (AM2315_Present)
@@ -1377,33 +1410,33 @@ void setup() {
     }
     else
     {
-      writeToBlynkStatusTerminal("AM2315 Not Present");
+      writeToBlynkStatusTerminal("AM2315 NP");
     }
 
     if (AS3935Present)
     {
-      writeToBlynkStatusTerminal("AS3935 ThunderBoard Present");
+      writeToBlynkStatusTerminal("AS3935 ThundPresent");
 
     }
     else
     {
-      writeToBlynkStatusTerminal("AS3935 ThunderBoard Not Present");
+      writeToBlynkStatusTerminal("AS3935 Thunder NP");
     }
   }
 
   if (EnglishOrMetric == 0)
   {
     Blynk.virtualWrite(V8,  "English");
-    writeToBlynkStatusTerminal("Units set to English");
+    writeToBlynkStatusTerminal("Units set English");
   }
   else
   {
     Blynk.virtualWrite(V8,  "Metric");
-    writeToBlynkStatusTerminal("Units set to Metric ");
+    writeToBlynkStatusTerminal("Units setMetric ");
 
-  
-  
-  
+
+
+
   }
 
 
@@ -1752,6 +1785,60 @@ void loop() {
     }
 
     Serial.println("---------------");
+    if (SunAirPlusWX_Present)
+      Serial.println("SunAirPlusWX");
+    else
+      Serial.println("SunAirPlusWX NP");
+    Serial.println("---------------");
+
+    // if SunAirPlusWX present, read charge data
+
+    if (SunAirPlusWX_Present)
+    {
+
+      LoadVoltage = WXLoadVoltage;
+      LoadCurrent = WXLoadCurrent;
+
+
+      BatteryVoltage = WXBatteryVoltage;
+      BatteryCurrent = WXBatteryCurrent;
+
+      SolarPanelVoltage = WXSolarPanelVoltage;
+      SolarPanelCurrent = -WXSolarPanelCurrent;
+
+#ifdef DEBUGPRINT
+      Serial.println("");
+      Serial.print("LIPO_Battery Load Voltage:  "); Serial.print(BatteryVoltage); Serial.println(" V");
+      Serial.print("LIPO_Battery Current:       "); Serial.print(BatteryCurrent); Serial.println(" mA");
+      Serial.println("");
+
+      Serial.print("Solar Panel Voltage:   "); Serial.print(SolarPanelVoltage); Serial.println(" V");
+      Serial.print("Solar Panel Current:   "); Serial.print(SolarPanelCurrent); Serial.println(" mA");
+      Serial.println("");
+
+      Serial.print("Load Voltage:   "); Serial.print(LoadVoltage); Serial.println(" V");
+      Serial.print("Load Current:   "); Serial.print(LoadCurrent); Serial.println(" mA");
+      Serial.println("");
+#endif
+
+    }
+    else
+    {
+
+      LoadVoltage = 0.0;
+      LoadCurrent = 0.0;
+
+
+      BatteryVoltage = 0.0;
+      BatteryCurrent = 0.0;
+
+      SolarPanelVoltage = 0.0;
+      SolarPanelCurrent = 0.0;
+
+
+    }
+
+    Serial.println("---------------");
     if (WXLink_Present)
       Serial.println("WXLink");
     else
@@ -1865,8 +1952,8 @@ void loop() {
         // if WXLINK present, read charge data
 
 
+         WXLoadCurrent = convert4BytesToFloat(buffer, 41);
 
-        WXLoadCurrent = convert4BytesToFloat(buffer, 41);
 
 
         WXBatteryVoltage = convert4BytesToFloat(buffer, 33);
@@ -1874,6 +1961,10 @@ void loop() {
 
         WXSolarPanelVoltage = convert4BytesToFloat(buffer, 45);
         WXSolarPanelCurrent = convert4BytesToFloat(buffer, 49);
+
+// Take LoadVoltage from Aux
+        WXLoadVoltage = convert4BytesToFloat(buffer, 53);
+
 
         WXMessageID = convert4BytesToLong(buffer, 57);
 

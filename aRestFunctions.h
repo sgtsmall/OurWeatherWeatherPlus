@@ -376,6 +376,24 @@ int metricUnitControl(String command) {
 }
 
 
+int SAPWXBEnabledControl(String command) {
+
+  SunAirPlusWXtoBlynk = 1;
+  writeToBlynkStatusTerminal("SAP WX to Blynk On");
+//  Blynk.virtualWrite(V8,  "English");
+  writeEEPROMState();
+  return 1;
+}
+
+int SAPWXBDisabledControl(String command) {
+
+  SunAirPlusWXtoBlynk = 0;
+  writeToBlynkStatusTerminal("SAP WX to Blynk Off");
+//  Blynk.virtualWrite(V8,  "English");
+  writeEEPROMState();
+  return 1;
+}
+
 
 // RasPiConnect
 
